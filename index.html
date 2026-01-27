@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Калькулятор цен (Турция / Украина)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --muted:#9aa6c3; --text:#e8eeff;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 12px 40px rgba(0,0,0,.35); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(110,168,255,.20), transparent 55%),
+                  radial-gradient(900px 600px at 80% 20%, rgba(255,211,110,.16), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:28px 16px 48px;
+    }
+    .wrap{max-width:980px;margin:0 auto}
+    header{margin-bottom:18px;}
+    .title h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .title p{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.4}
+    .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .card h2{margin:0 0 10px;font-size:16px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .seg{
+      display:flex; gap:8px; background:rgba(255,255,255,.04); padding:6px; border-radius:14px;
+      border:1px solid var(--border);
+    }
+    .seg button{
+      border:0; background:transparent; color:var(--muted);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
+      transition:.15s transform, .15s background, .15s color;
+      white-space:nowrap;
+    }
+    .seg button.active{
+      background:rgba(110,168,255,.18);
+      color:var(--text);
+      outline:1px solid rgba(110,168,255,.35);
+    }
+    .seg button:hover{transform:translateY(-1px)}
+    label{display:block;margin:10px 0 6px;color:var(--muted);font-size:13px}
+    .input{
+      display:flex; gap:10px; align-items:center;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .input input{
+      width:100%;
+      border:0; outline:none; background:transparent;
+      color:var(--text); font-size:18px; font-weight:800;
+    }
+    .badge{
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted); font-weight:800; font-size:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .result{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 520px){ .result{grid-template-columns:1fr} }
+    .pill{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .pill .k{color:var(--muted);font-size:12px;margin-bottom:6px}
+    .pill .v{font-size:18px;font-weight:900}
+    .pill .v small{font-size:12px;color:var(--muted);font-weight:700}
+    .hint{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.4;}
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:800;
+      transition:.15s transform, .15s background;
+    }
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.06)}
+    .btn.primary{background:rgba(110,168,255,.18); border-color:rgba(110,168,255,.35);}
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+    }
+    .table th, .table td{
+      padding:12px 12px;
+      border-bottom:1px solid var(--border);
+      font-size:14px;
+    }
+    .table th{
+      text-align:left;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.3px;
+      text-transform:uppercase;
+      background:rgba(255,255,255,.03);
+    }
+    .table tr:last-child td{border-bottom:0}
+    .price{font-weight:900}
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(255,211,110,.45);
+      background:rgba(255,211,110,.10);
+      color:var(--text);
+      font-weight:900;
+      text-align:center;
+    }
+    details{
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.02);
+    }
+    summary{cursor:pointer;font-weight:900;color:var(--text);list-style:none;}
+    summary::-webkit-details-marker{display:none}
+    .rates{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width: 650px){ .rates{grid-template-columns:1fr} }
+    .ratebox{border:1px solid var(--border);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.02);}
+    .ratebox h3{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:900}
+    .ratebox ul{margin:0; padding-left:16px}
+    .ratebox li{margin:6px 0; font-size:13px}
+    footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+  
+    .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:16px}
+    .table{min-width:520px}
+    @media (max-width: 420px){
+      body{padding:18px 12px 32px;}
+      .card{padding:14px}
+      .seg{width:100%}
+      .seg button{flex:1; width:50%; padding:10px 10px}
+      .result{gap:8px}
+      .pill{padding:10px}
+      .btn{flex:1}
+    }
+
+  
+    .ps-links{
+      display:flex;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .ps-links a{
+      flex:1;
+      text-align:center;
+      padding:10px 12px;
+      border-radius:14px;
+      text-decoration:none;
+      font-weight:800;
+      color:var(--text);
+      background:rgba(110,168,255,.18);
+      border:1px solid rgba(110,168,255,.35);
+    }
+    .ps-links a:hover{
+      background:rgba(110,168,255,.28);
+    }
+
+  
+    @media (max-width: 520px){
+      body{padding:18px 12px 32px;}
+      .card{padding:14px}
+      .title h1{font-size:20px}
+      .ps-links a{flex:unset; width:100%;}
+      .seg{width:100%}
+      .seg button{flex:1; width:50%;}
+      .input input{font-size:17px}
+      .btns{gap:8px}
+      .btn{flex:1}
+      .result{grid-template-columns:1fr; gap:8px}
+      .pill{padding:10px}
+      .table{min-width:520px} /* таблица остаётся скроллимой */
+    }
+    @media (max-width: 360px){
+      .title h1{font-size:18px}
+      .seg button{padding:9px 8px}
+      .badge{font-size:11px}
+    }
+
+  
+    /* НАСТОЯЩАЯ мобильная адаптация: без горизонтального скролла и "обрезания" */
+    @media (max-width: 480px){
+      body{padding:14px 10px 26px;}
+      .grid{grid-template-columns:1fr; gap:12px;}
+      .card{padding:12px; border-radius:16px;}
+      header{margin-bottom:12px;}
+      .title h1{font-size:clamp(16px, 4.6vw, 20px); line-height:1.15;}
+      .title p{font-size:clamp(12px, 3.4vw, 14px);}
+
+      /* Ссылки Store и переключатель региона — в столбик */
+      .ps-links{gap:8px;}
+      .ps-links a{flex:1 1 100%; width:100%; padding:10px 12px; font-size:14px; border-radius:12px;}
+      .seg{width:100%; flex-wrap:wrap;}
+      .seg button{flex:1 1 100%; width:100%; padding:10px 12px; font-size:14px;}
+
+      /* Результат и кнопки — в столбик */
+      .result{grid-template-columns:1fr; gap:8px;}
+      .btns{flex-direction:column;}
+      .btn{width:100%;}
+      .input input{font-size:16px;}
+      .badge{font-size:11px;}
+      .pill .v{font-size:17px;}
+      .hint{font-size:12px;}
+    }
+
+    /* Таблица подписок на мобильных превращается в карточки (без горизонтальной прокрутки) */
+    @media (max-width: 480px){
+      .table{min-width:0 !important;}
+      .table thead{display:none;}
+      .table, .table tbody, .table tr, .table td{display:block; width:100%;}
+      .table tr{
+        border:1px solid var(--border);
+        border-radius:14px;
+        margin:10px 0;
+        background:rgba(255,255,255,.02);
+        overflow:hidden;
+      }
+      .table td{
+        border-bottom:1px solid var(--border);
+        padding:10px 12px;
+        font-size:14px;
+      }
+      .table td:last-child{border-bottom:0;}
+      .table td::before{
+        content: attr(data-label);
+        display:block;
+        color: var(--muted);
+        font-size:12px;
+        font-weight:800;
+        text-transform:uppercase;
+        letter-spacing:.2px;
+        margin-bottom:4px;
+      }
+      .table td.price{font-size:15px;}
+      .note{border-radius:14px; padding:10px 12px; font-size:14px;}
+    }
+
+    /* Очень маленькие экраны (Galaxy S23 в плотной сетке) */
+    @media (max-width: 380px){
+      body{padding:12px 8px 22px;}
+      .card{padding:10px;}
+      .ps-links a, .seg button{font-size:13px; padding:9px 10px;}
+      .pill .v{font-size:16px;}
+      .btn{font-size:13px; padding:9px 10px;}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Калькулятор цен в ₽ (Турция / Украина)</h1>
+        <p>Цена считается сразу при вводе суммы. По умолчанию стоит 0 — чтобы результат был виден сразу.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- CALC -->
+      <section class="card" aria-label="Калькулятор">
+        
+        <div class="ps-links">
+          <a href="https://store.playstation.com/en-tr/pages/deals" target="_blank" rel="noopener">Сайт TR</a>
+          <a href="https://store.playstation.com/ru-ua/pages/deals" target="_blank" rel="noopener">Сайт UA</a>
+        </div>
+
+        <h2>Счётчик цен</h2>
+
+        <div class="row">
+          <div class="seg" role="tablist" aria-label="Регион">
+            <button id="tabTR" class="active" type="button" role="tab" aria-selected="true">Турция (TL)</button>
+            <button id="tabUA" type="button" role="tab" aria-selected="false">Украина (UAH)</button>
+          </div>
+          <span id="regionBadge" class="badge">Регион: Турция</span>
+        </div>
+
+        <label for="amount">Сумма</label>
+        <div class="input">
+          <input id="amount" inputmode="decimal" value="0" />
+          <span id="currencyBadge" class="badge">TL</span>
+        </div>
+
+        <div class="result">
+          <div class="pill">
+            <div class="k">Курс (₽ за 1 единицу)</div>
+            <div class="v"><span id="rate">—</span> <small>₽</small></div>
+          </div>
+          <div class="pill">
+            <div class="k">Итого к оплате</div>
+            <div class="v"><span id="total">—</span> <small>₽</small></div>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="btn primary" id="copyBtn" type="button">Скопировать итог</button>
+          <button class="btn" id="clearBtn" type="button">Сбросить на 0</button>
+        </div>
+
+        <div class="hint" id="hint">Курс выбирается по правилу “от X и выше”. Минимальная итоговая цена — 250₽.</div>
+
+        <details>
+          <summary>Показать таблицу курсов</summary>
+          <div class="rates">
+            <div class="ratebox">
+              <h3>Турция (TL)</h3>
+              <ul id="ratesTR"></ul>
+            </div>
+            <div class="ratebox">
+              <h3>Украина (UAH)</h3>
+              <ul id="ratesUA"></ul>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- SUBSCRIPTIONS (ИНФО) -->
+      <aside class="card" aria-label="Цены на подписки (информация)">
+        <h2>🟧 PlayStation Plus и EA Play (цены)</h2>
+
+        <div class="table-wrap" aria-label="Прокрутка таблицы на мобильных"><table class="table" aria-label="Таблица цен (информативно)">
+          <thead>
+            <tr>
+              <th>Подписка</th>
+              <th>Срок</th>
+              <th>Цена</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Основной</td><td>1 месяц</td><td class="price">1050₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Основной</td><td>3 месяца</td><td class="price">1850₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Основной</td><td>12 месяцев</td><td class="price">3750₽</td></tr>
+
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Экстра</td><td>1 месяц</td><td class="price">1300₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Экстра</td><td>3 месяца</td><td class="price">2700₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Экстра</td><td>12 месяцев</td><td class="price">5750₽</td></tr>
+
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Люкс</td><td>1 месяц</td><td class="price">1500₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Люкс</td><td>3 месяца</td><td class="price">3100₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">PS Plus — Люкс</td><td>12 месяцев</td><td class="price">6500₽</td></tr>
+
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">EA Play</td><td>1 месяц</td><td class="price">750₽</td></tr>
+            <tr><td data-label="Подписка" data-label="Срок" data-label="Цена">EA Play</td><td>12 месяцев</td><td class="price">2550₽</td></tr>
+
+            <tr><td colspan="2" data-label="Позиция"><b>Аккаунт (дополнительно)</b></td><td class="price" data-label="Цена">+100₽</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="note">+100₽ за аккаунт</div>
+      </aside>
+    </div>
+
+    <footer>© Одностраничник-калькулятор.</footer>
+  </div>
+
+  <script>
+    const RATES_TR = [
+      { from: 2497, rate: 2.68 },
+	  { from: 2197, rate: 2.78 },
+      { from: 1497, rate: 2.88 },
+      { from:  997, rate: 3.08 },
+	  { from:  797, rate: 3.18 },
+	  { from:  597, rate: 3.28 },
+      { from:  497, rate: 3.38 },
+	  { from:  397, rate: 3.48 },
+      { from:  297, rate: 3.78 },
+      { from:   97, rate: 4.18 },
+      { from:    0, rate: 5.38 },
+    ];
+
+    const RATES_UA = [
+      { from: 2397, rate: 2.55 },
+      { from: 1897, rate: 2.65 },
+	  { from: 1597, rate: 2.75 },
+	  { from: 1197, rate: 2.95 },
+      { from:  797, rate: 3.05 },
+      { from:  597, rate: 3.15 },
+      { from:  497, rate: 3.25 },
+	  { from:  397, rate: 3.35 },
+	  { from:  297, rate: 3.55 },
+      { from:    0, rate: 3.75 },
+    ];
+
+    const tabTR = document.getElementById('tabTR');
+    const tabUA = document.getElementById('tabUA');
+    const amountEl = document.getElementById('amount');
+    const rateEl = document.getElementById('rate');
+    const totalEl = document.getElementById('total');
+    const regionBadge = document.getElementById('regionBadge');
+    const currencyBadge = document.getElementById('currencyBadge');
+    const hintEl = document.getElementById('hint');
+    const copyBtn = document.getElementById('copyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const ratesTRList = document.getElementById('ratesTR');
+    const ratesUAList = document.getElementById('ratesUA');
+
+    let region = 'TR';
+
+    function formatMoney(n){
+      if (!isFinite(n)) return '—';
+      return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+    function parseNumber(value){
+      const cleaned = String(value).replace(/\s+/g,'').replace(',', '.');
+      const num = Number(cleaned);
+      return isFinite(num) ? num : NaN;
+    }
+    function getRate(amount, rates){
+      for (const r of rates){
+        if (amount >= r.from) return r.rate;
+      }
+      return rates[rates.length - 1].rate;
+    }
+
+    function recalc(){
+      const amount = parseNumber(amountEl.value);
+      const rates = region === 'TR' ? RATES_TR : RATES_UA;
+
+      if (!isFinite(amount) || amount < 0){
+        rateEl.textContent = '—';
+        totalEl.textContent = '—';
+        hintEl.textContent = 'Введите сумму (число больше или равно 0).';
+        return;
+      }
+
+      const rate = getRate(amount, rates);
+      let total = amount * rate;
+      if (total < 450) total = 450;
+
+      rateEl.textContent = rate.toFixed(2).replace('.', ',');
+      total = Math.ceil(total / 50) * 50; // округляем ТОЛЬКО итоговую сумму
+      totalEl.textContent = formatMoney(total);
+      hintEl.textContent = `Сумма: ${amount} ${region === 'TR' ? 'TL' : 'UAH'} × курс ${rate.toFixed(2).replace('.', ',')} ₽ = ${formatMoney(total)} ₽`;
+    }
+
+    function setRegion(next){
+      region = next;
+      const isTR = region === 'TR';
+
+      tabTR.classList.toggle('active', isTR);
+      tabUA.classList.toggle('active', !isTR);
+      tabTR.setAttribute('aria-selected', String(isTR));
+      tabUA.setAttribute('aria-selected', String(!isTR));
+
+      regionBadge.textContent = `Регион: ${isTR ? 'Турция' : 'Украина'}`;
+      currencyBadge.textContent = isTR ? 'TL' : 'UAH';
+
+      recalc();
+    }
+
+    function fillRates(){
+      ratesTRList.innerHTML = RATES_TR
+        .map(r => `<li>От <b>${r.from}TL</b> — <b>${String(r.rate).replace('.', ',')}</b></li>`).join('');
+      ratesUAList.innerHTML = RATES_UA
+        .map(r => `<li>От <b>${r.from}UAH</b> — <b>${String(r.rate).replace('.', ',')}</b></li>`).join('');
+    }
+
+    tabTR.addEventListener('click', () => setRegion('TR'));
+    tabUA.addEventListener('click', () => setRegion('UA'));
+    amountEl.addEventListener('input', recalc);
+
+    clearBtn.addEventListener('click', () => {
+      amountEl.value = '0';
+      amountEl.focus();
+      recalc();
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const totalText = totalEl.textContent;
+      if (totalText === '—') return;
+
+      const cur = (region === 'TR') ? 'TL' : 'UAH';
+      const amount = amountEl.value || '0';
+      const rate = rateEl.textContent;
+      const text = `Регион: ${region === 'TR' ? 'Турция' : 'Украина'} | Сумма: ${amount} ${cur} | Курс: ${rate} ₽ | Итого: ${totalText} ₽`;
+
+      try{
+        await navigator.clipboard.writeText(text);
+        hintEl.textContent = '✅ Итог скопирован в буфер обмена.';
+        setTimeout(recalc, 1100);
+      }catch(e){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        hintEl.textContent = '✅ Итог скопирован.';
+        setTimeout(recalc, 1100);
+      }
+    });
+
+    fillRates();
+    setRegion('TR');
+    recalc();
+    // курсор в поле — чтобы сразу вводить
+    amountEl.focus();
+    amountEl.select();
+  </script>
+</body>
+</html>

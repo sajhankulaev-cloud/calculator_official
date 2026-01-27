@@ -1,1 +1,2 @@
-# calculator_official
+# ps-cals
+Калькулятор для опта
